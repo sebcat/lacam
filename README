@@ -1,0 +1,12 @@
+lacam - Lua/Android Camera
+==========================
+
+Lua bindings for ICameraService et.al. in Android. Work in progress.
+
+Build
+-----
+
+- add lacam to your manifest (e.g., as external/lacam) or clone the git
+  manually
+- . build/envsetup.sh && lunch <lunch-target>
+- m lacam
