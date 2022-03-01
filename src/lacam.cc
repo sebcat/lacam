@@ -80,6 +80,20 @@ static inline struct lacam_service *tolacam_service(lua_State *L, int arg)
   return (struct lacam_service*)luaL_checkudata(L, arg, LACAM_SERVICE);
 }
 
+static inline int _checkstatus(lua_State *L, android::binder::Status status,
+    const char *prefix)
+{
+  if (!status.isOk()) {
+    std::stringstream ss;
+    ss << status;
+    return luaL_error(L, "%s: %s", prefix, ss.str().c_str());
+  }
+
+  return 0;
+}
+
+#define checkstatus(l, s) _checkstatus((l), (s), __func__)
+
 static inline struct lacam_vendor_tag_descriptor *
     tolacam_vendor_tag_descriptor(lua_State *L, int arg)
 {
@@ -220,10 +234,7 @@ static int lacam_service_get_number_of_cameras(lua_State *L)
   struct lacam_service *svc = tolacam_service(L, 1);
   lua_Integer type = luaL_checkinteger(L, 2);
   auto status = svc->service->getNumberOfCameras(type, &ncams);
-  if (!status.isOk()) {
-    return luaL_error(L, "failed to get number of cameras");
-  }
-
+  checkstatus(L, status);
   lua_pushinteger(L, ncams);
   return 1;
 }
@@ -253,18 +264,12 @@ static int lacam_service_connect_device(lua_State *L)
     feat = std::unique_ptr<String16>();
   }
 
-  /* XXX: Unsafe and incorrect - move to own data struct once things
-   *      work */
-  sp<ICameraDeviceCallbacks> callbacks = new CameraDeviceCallbacks();
+  /* TODO: move to own data struct once things work */
+  sp<ICameraDeviceCallbacks> callbacks(new CameraDeviceCallbacks());
   sp<ICameraDeviceUser> device;
-
   auto status = svc->service->connectDevice(callbacks, String16(camera_id),
       String16(op_package_name), feat, client_uid, &device);
-  if (!status.isOk()) {
-    std::stringstream ss;
-    ss << status;
-    return luaL_error(L, "connectDevice failure: %s", ss.str().c_str());
-  }
+  checkstatus(L, status);
 
   /* TODO: return camera device object (callbacks + ICameraDeviceUser impl) */
   return 0;
@@ -316,10 +321,7 @@ static int lacam_service_get_camera_characteristics(lua_State *L)
   metadata = new_camera_metadata(L);
   auto status = svc->service->getCameraCharacteristics(String16(camera_id),
       metadata->metadata);
-  if (!status.isOk()) {
-    return luaL_error(L, "failed to get camera characteristics (%d)",
-        status.serviceSpecificErrorCode());
-  }
+  checkstatus(L, status);
 
   return 1;
 }
@@ -335,9 +337,7 @@ static int lacam_service_get_camera_vendor_tag_descriptor(lua_State *L)
   luaL_setmetatable(L, LACAM_VENDOR_TAG_DESCRIPTOR);
   vtd->desc = new VendorTagDescriptor();
   auto status = svc->service->getCameraVendorTagDescriptor(vtd->desc.get());
-  if (!status.isOk()) {
-    return luaL_error(L, "failed to get camera vendor tag descriptor");
-  }
+  checkstatus(L, status);
 
   return 1;
 }
@@ -353,9 +353,7 @@ static int lacam_service_get_camera_vendor_tag_cache(lua_State *L)
   luaL_setmetatable(L, LACAM_VENDOR_TAG_DESCRIPTOR_CACHE);
   vtc->cache = new VendorTagDescriptorCache();
   auto status = svc->service->getCameraVendorTagCache(vtc->cache.get());
-  if (!status.isOk()) {
-    return luaL_error(L, "failed to get camera vendor tag descriptor");
-  }
+  checkstatus(L, status);
 
   return 1;
 }
