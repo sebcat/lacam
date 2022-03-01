@@ -36,6 +36,7 @@ cc_library {
     "src/lua-5.4.3/src/lzio.c",
     "src/lacam.cc",
     "src/camera_device_callbacks.cc",
+    "src/camera_service_listener.cc",
   ],
   cflags: [
     "-Wall",
