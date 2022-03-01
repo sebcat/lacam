@@ -1,5 +1,3 @@
-# not tested
-
 cc_library {
   name: "liblacam",
   export_include_dirs: ["src/lua-5.4.3/src"],
@@ -37,10 +35,20 @@ cc_library {
     "src/lua-5.4.3/src/lvm.c",
     "src/lua-5.4.3/src/lzio.c",
     "src/lacam.cc",
+    "src/camera_device_callbacks.cc",
   ],
   cflags: [
     "-Wall",
     "-Werror",
+    "-DLUA_USE_POSIX",
+  ],
+  shared_libs: [
+    "libbinder",
+    "libutils",
+    "libhidlbase",
+    "libcamera_client",
+    "libcamera_metadata",
+    "libbase",
   ],
 }
 
@@ -51,14 +59,13 @@ cc_binary {
   ],
   shared_libs: [
     "libbinder",
-    "liblog",
-    "libbase",
     "libutils",
-    "libcutils",
     "libhidlbase",
+    "libcamera_client",
+    "libbase",
+    "libcamera_metadata",
   ],
   static_libs: [
     "liblacam",
-    "libcamera_client",
   ]
 }
